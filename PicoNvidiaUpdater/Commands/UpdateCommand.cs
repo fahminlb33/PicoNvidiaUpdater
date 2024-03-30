@@ -294,7 +294,7 @@ internal class UpdateCommand : AsyncCommand<UpdateCommand.Settings>
                 }
 
                 // launch installer
-                if (settings.DownloadOnly)
+                if (!settings.DownloadOnly)
                 {
                     await _installer.Install(setupFileName, settings.Minimal, settings.Quiet);
                 }

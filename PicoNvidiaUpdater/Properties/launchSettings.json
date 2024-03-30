@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PicoNvidiaUpdater": {
+      "commandName": "Project",
+      "commandLineArgs": "-i"
+    }
+  }
+}

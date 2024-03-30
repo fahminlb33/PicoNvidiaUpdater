@@ -37,4 +37,4 @@ You'll need .NET 8 to run the executable on the release page. If you don't have 
 
 This project is licensed under MIT License.
 
-Huge thank to `TinyNvidiaUpdateChecker` for the inspiration and original code which I refactored here.
+Huge thanks to `TinyNvidiaUpdateChecker` for the inspiration and original code which I refactored here.

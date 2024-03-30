@@ -20,6 +20,9 @@ internal class UpdateCommand : AsyncCommand<UpdateCommand.Settings>
         [CommandOption("-q|--quiet")]
         public bool Quiet { get; set; }
 
+        [CommandOption("-c|--check")]
+        public bool Check { get; set; }
+
         [CommandOption("-m|--minimal")]
         [DefaultValue(true)]
         public bool Minimal { get; set; }
@@ -31,7 +34,7 @@ internal class UpdateCommand : AsyncCommand<UpdateCommand.Settings>
         [CommandOption("-o|--output-path")]
         public string? OutputPath { get; set; }
 
-        [CommandOption("--download")]
+        [CommandOption("-d|--download")]
         public bool DownloadOnly { get; set; }
 
         [CommandOption("--override-dekstop")]
@@ -120,7 +123,7 @@ internal class UpdateCommand : AsyncCommand<UpdateCommand.Settings>
 
         if (string.IsNullOrWhiteSpace(settings.OutputPath) && settings.DownloadOnly)
         {
-            return ValidationResult.Error("Specifying --output-path are quired when --download are specified");
+            return ValidationResult.Error("The --output-path are required when --download are specified");
         }
 
         if (!string.IsNullOrWhiteSpace(settings.OutputPath) && !settings.DownloadOnly)
@@ -198,14 +201,21 @@ internal class UpdateCommand : AsyncCommand<UpdateCommand.Settings>
         }
 
         // check if there is an update
-        //if (currentDriver == null || float.Parse(currentDriver.DownloadInfo.Version) <= float.Parse(driverVersion))
-        //{
-        //    _logger.LogWarning("No driver update are available");
-        //    AnsiConsole.WriteLine("No updates available");
+        if (currentDriver == null || float.Parse(currentDriver.DownloadInfo.Version) <= float.Parse(driverVersion))
+        {
+            _logger.LogWarning("No driver update are available");
+            AnsiConsole.WriteLine("No updates available");
 
-        //    return 0;
-        //}
+            return 0;
+        }
 
+        // is this check mode?
+        if (settings.Check)
+        {
+            return -1;
+        }
+
+        // print details
         _logger.LogDebug("Selected driver {Data}", JsonSerializer.Serialize(currentDriver.DownloadInfo));
         var releaseDelta = DateTime.Now - currentDriver.DownloadInfo.ReleaseDateTime;
         var releaseAgo = DateTime.Now.Subtract(releaseDelta).Humanize();
@@ -227,7 +237,7 @@ internal class UpdateCommand : AsyncCommand<UpdateCommand.Settings>
         if (settings.Interactive && !AnsiConsole.Confirm("Do you want to continue with [green]driver update[/]?"))
         {
             _logger.LogInformation("Update cancelled by user action");
-            return 0;
+            return -2;
         }
 
         // create target directory
@@ -284,7 +294,10 @@ internal class UpdateCommand : AsyncCommand<UpdateCommand.Settings>
                 }
 
                 // launch installer
-                await _installer.Install(setupFileName, settings.Minimal, settings.Quiet);
+                if (settings.DownloadOnly)
+                {
+                    await _installer.Install(setupFileName, settings.Minimal, settings.Quiet);
+                }
 
                 installBar.IsIndeterminate = false;
                 installBar.Value = 100;
